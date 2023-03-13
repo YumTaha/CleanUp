@@ -80,7 +80,7 @@ clean_track, trash_missed, start_time = 0, 0, 0  # initialize count
 # Initialize the game
 screen = pygame.display.set_mode((800, 480))
 pygame.display.set_caption('Clean UP')
-icon = pygame.image.load('items/trash.png').convert_alpha()
+icon = pygame.image.load('background/game_icon.png').convert_alpha()
 pygame.display.set_icon(icon)
 clock = pygame.time.Clock()
 font = pygame.font.Font('fonts/Pixeltype.ttf', 30)
