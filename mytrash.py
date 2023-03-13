@@ -1,6 +1,6 @@
 import pygame
 from sys import exit
-import random
+from random import randint, choice
 
 
 class Trashcan(pygame.sprite.Sprite):
@@ -38,8 +38,10 @@ class Trash(pygame.sprite.Sprite):
             self.paper = paper
 
         self.image = self.paper
-        self.rect = self.image.get_rect(bottomright= (random.randint(10, 750), random.randint(-70,-30)))
-    
+        self.rect = self.image.get_rect(bottomright= (randint(10, 750), randint(-70,-30)))
+        
+        self.collide_sound = pygame.mixer.Sound('audio/collision.wav')
+
     def update(self):
         self.rect.y += 2
         self.destroy()
@@ -50,6 +52,8 @@ class Trash(pygame.sprite.Sprite):
         if trashcan.sprite.rect.midleft <= self.rect.center <= trashcan.sprite.rect.midright and self.rect.center[1] >330:
             clean_track += 1
             self.kill()
+            self.collide_sound.play()
+
         if self.rect.y >= 360:
             trash_missed += 1
             self.kill()
@@ -73,23 +77,25 @@ pygame.init()
 game_active = True
 clean_track, trash_missed, start_time = 0, 0, 0  # initialize count
 
-
 # Initialize the game
 screen = pygame.display.set_mode((800, 480))
 pygame.display.set_caption('Clean UP')
 icon = pygame.image.load('items/trash.png').convert_alpha()
 pygame.display.set_icon(icon)
 clock = pygame.time.Clock()
-font = pygame.font.Font('pixeltype/Pixeltype.ttf', 30)
+font = pygame.font.Font('fonts/Pixeltype.ttf', 30)
 
+# Background music
+bg_music1 = pygame.mixer.Sound('audio/bg_music1.wav')
+bg_music2 = pygame.mixer.Sound('audio/bg_music2.mp3')
+bg_music = choice([bg_music1, bg_music2])
+bg_music.set_volume(0.2)
+bg_music.play(loops = -1)
 
-
-
+# Calling classes and creating the ingame items
 trashcan = pygame.sprite.GroupSingle()
 trashcan.add(Trashcan())
-
 trash_group = pygame.sprite.Group()
-
 
 # Initialize the surface (background)
 background_sur = pygame.image.load('background/background.jpg').convert()
@@ -136,12 +142,19 @@ while True:
         # Game Lost
         if trash_missed == 10:
             game_active = False
+
+            # Gameover sound
+            bg_music.stop()
+            gameover_sound = pygame.mixer.Sound('audio/gameover.wav')
+            gameover_sound.set_volume(0.1)
+            gameover_sound.play()
+
     
     else:
         # Initialize the surface (gameover)
         gameover_sur = pygame.image.load('background/background.jpg').convert()
-        font_over = pygame.font.Font('pixeltype/Pixeltype.ttf', 100)
-        font_choices = pygame.font.Font('pixeltype/Pixeltype.ttf', 60)
+        font_over = pygame.font.Font('fonts/Pixeltype.ttf', 100)
+        font_choices = pygame.font.Font('fonts/Pixeltype.ttf', 60)
 
         # game over texts
         textover_sur = font_over.render('GAME OVER', False, (64, 45, 75))
@@ -163,6 +176,8 @@ while True:
             clean_track, trash_missed = 0, 0  # initialize count
             score_sur = font.render('0 Cleaned - 0/10 Missed', False, (64, 64, 64))
             game_active = True
+            bg_music.play(loops = -1)
+            trash_group.empty()
             start_time = pygame.time.get_ticks()
 
         if event.type == pygame.MOUSEBUTTONDOWN and no_rec.collidepoint(event.pos):
