@@ -29,13 +29,12 @@ class Trashcan(pygame.sprite.Sprite):
         self.player_input()
 
 class Trash(pygame.sprite.Sprite):
-    def __init__(self, type):
+    def __init__(self):
         super().__init__()
-        
-        if type == 'paper':
-            paper = pygame.image.load('items/trash.png').convert_alpha()
-            paper = pygame.transform.rotozoom(paper, 0, 1.5)
-            self.paper = paper
+
+        paper = pygame.image.load('items/trash.png').convert_alpha()
+        paper = pygame.transform.rotozoom(paper, 0, 1.5)
+        self.paper = paper
 
         self.image = self.paper
         self.rect = self.image.get_rect(bottomright= (randint(10, 750), randint(-70,-30)))
@@ -102,7 +101,7 @@ background_sur = pygame.image.load('background/background.jpg').convert()
 score_sur = font.render('0 Cleaned - 0/10 Missed', False, (64, 64, 64))
 score_rec = score_sur.get_rect(center = (390, 30))
 
-# trashes
+# Items
 trash_sur = pygame.image.load('items/trash.png').convert_alpha()
 trash_sur = pygame.transform.rotozoom(trash_sur, 0, 1.5)
 
@@ -120,7 +119,7 @@ while True:
             exit()
 
         if event.type == obstacle_timer and game_active:
-            trash_group.add(Trash('paper'))
+            trash_group.add(Trash())
 
     if game_active:
         # Placing the surface we made on the original surface
