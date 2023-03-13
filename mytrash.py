@@ -2,6 +2,59 @@ import pygame
 from sys import exit
 import random
 
+
+class Trashcan(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        trashcan_close = pygame.image.load('items/trashcan_close.png').convert_alpha()
+        trashcan_open = pygame.image.load('items/trashcan_open.png').convert_alpha()
+        self.trashcan_ = [trashcan_close, trashcan_open]
+        self.trashcan_index = 0
+
+        self.image = self.trashcan_[self.trashcan_index]
+        self.rect = self.image.get_rect(midbottom= (100, 385))
+        
+    def set_index(self, index):
+        self.trashcan_index = index
+        self.image = self.trashcan_[self.trashcan_index]
+        
+    def player_input(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT] and self.rect.midleft[0] > 0:
+            self.rect.x -= 4
+        elif keys[pygame.K_RIGHT] and self.rect.midright[0] < 800:
+            self.rect.x += 4
+
+    def update(self):
+        self.player_input()
+
+class Trash(pygame.sprite.Sprite):
+    def __init__(self, type):
+        super().__init__()
+        
+        if type == 'paper':
+            paper = pygame.image.load('items/trash.png').convert_alpha()
+            paper = pygame.transform.rotozoom(paper, 0, 1.5)
+            self.paper = paper
+
+        self.image = self.paper
+        self.rect = self.image.get_rect(bottomright= (random.randint(10, 750), random.randint(-70,-30)))
+    
+    def update(self):
+        self.rect.y += 2
+        self.destroy()
+
+    def destroy(self):
+        global trash_missed, clean_track
+
+        if trashcan.sprite.rect.midleft <= self.rect.center <= trashcan.sprite.rect.midright and self.rect.center[1] >330:
+            clean_track += 1
+            self.kill()
+        if self.rect.y >= 360:
+            trash_missed += 1
+            self.kill()
+
+
 def get_timer():
     current_time = (pygame.time.get_ticks() - start_time) // 1000 # convert to seconds
     minutes, seconds = divmod(current_time, 60)
@@ -10,41 +63,15 @@ def get_timer():
     time_rec = score_sur.get_rect(center=(110, 30))
     screen.blit(time_sur, time_rec)
 
-def trash_movement(trash_list, trash_missed):
-    if trash_list:
-        for trash_rec in trash_list:
-            trash_rec.y += 2
-            screen.blit(trash_sur, trash_rec)
-            if trash_rec.y >= 360: trash_missed += 1
-
-        trash_list = [trashes for trashes in trash_list if trashes.y < 360]
-            
-        return trash_list, trash_missed
-    else:
-        return [], trash_missed
-
-def collisions(trashcan, trash):
-    global trashcan_index, trashcan_sur
-    if trash:
-        for trash_rec in trash:
-            if trashcan.colliderect(trash_rec): 
-                
-                trashcan_index = 1
-                trashcan_sur = trashcan_[trashcan_index]
-
-                if trashcan_rec.midleft[0] <= trash_rec.midbottom[0] <= trashcan_rec.midright[0] and trash_rec.midbottom[1] > 335:
-                
-                    trash_rec_list.remove(trash_rec)
-                    trashcan_index = 0
-                    trashcan_sur = trashcan_[trashcan_index]
-                    return True
-            
-    return False
-
- 
+def collision_sprite():
+    global clean_track
+    if pygame.sprite.spritecollide(trashcan.sprite, trash_group, False):
+        trashcan.sprite.set_index(1)
+    else: trashcan.sprite.set_index(0)
 
 pygame.init()
-clean_track, trash_missed = 0, 0  # initialize count
+game_active = True
+clean_track, trash_missed, start_time = 0, 0, 0  # initialize count
 
 
 # Initialize the game
@@ -54,8 +81,15 @@ icon = pygame.image.load('items/trash.png').convert_alpha()
 pygame.display.set_icon(icon)
 clock = pygame.time.Clock()
 font = pygame.font.Font('pixeltype/Pixeltype.ttf', 30)
-game_active = True
-start_time = 0
+
+
+
+
+trashcan = pygame.sprite.GroupSingle()
+trashcan.add(Trashcan())
+
+trash_group = pygame.sprite.Group()
+
 
 # Initialize the surface (background)
 background_sur = pygame.image.load('background/background.jpg').convert()
@@ -66,14 +100,6 @@ score_rec = score_sur.get_rect(center = (390, 30))
 trash_sur = pygame.image.load('items/trash.png').convert_alpha()
 trash_sur = pygame.transform.rotozoom(trash_sur, 0, 1.5)
 
-trash_rec_list = []
-
-trashcan_close = pygame.image.load('items/trashcan_close.png').convert_alpha()
-trashcan_open = pygame.image.load('items/trashcan_open.png').convert_alpha()
-trashcan_ = [trashcan_close, trashcan_open]
-trashcan_index = 0
-trashcan_sur =trashcan_[trashcan_index]
-trashcan_rec = trashcan_sur.get_rect(midbottom= (80, 385))
 
 # Timer
 obstacle_timer = pygame.USEREVENT + 1
@@ -88,40 +114,24 @@ while True:
             exit()
 
         if event.type == obstacle_timer and game_active:
-            trash_rec_list.append(trash_sur.get_rect(bottomright= (random.randint(10, 750), random.randint(-70,-30))))
+            trash_group.add(Trash('paper'))
 
     if game_active:
         # Placing the surface we made on the original surface
         screen.blit(background_sur, (0, 0))
         screen.blit(score_sur, score_rec)
         get_timer()
-        
 
-
-
-        screen.blit(trashcan_sur, trashcan_rec)
-
-
-        # Obstacle Movement
-        trash_rec_list, trash_missed = trash_movement(trash_rec_list, trash_missed)
+        #screen.blit(trashcan_sur, trashcan_rec)
+        trashcan.draw(screen)
+        trashcan.update()
+        trash_group.draw(screen)
+        trash_group.update()
 
         score_sur = font.render(f'{clean_track} Cleaned - {trash_missed}/10 Missed', False, (64, 64, 64))
         
-
-        # Keyboard detection and trach can position change
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT] and trashcan_rec.midleft[0] > 0:
-            trashcan_rec.x -= 4
-        elif keys[pygame.K_RIGHT] and trashcan_rec.midright[0] < 800:
-            trashcan_rec.x += 4
-
-            
         # Colision detection and animation change
-        coll_detector = collisions(trashcan_rec, trash_rec_list)
-        if coll_detector:
-            clean_track += 1
-            score_sur = font.render(f'{clean_track} Cleaned - {trash_missed}/10 Missed', False, (64, 64, 64))
-        
+        collision_sprite()
 
         # Game Lost
         if trash_missed == 10:
@@ -132,7 +142,6 @@ while True:
         gameover_sur = pygame.image.load('background/background.jpg').convert()
         font_over = pygame.font.Font('pixeltype/Pixeltype.ttf', 100)
         font_choices = pygame.font.Font('pixeltype/Pixeltype.ttf', 60)
-        trash_rec_list.clear()
 
         # game over texts
         textover_sur = font_over.render('GAME OVER', False, (64, 45, 75))
