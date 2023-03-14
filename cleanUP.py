@@ -66,7 +66,7 @@ def get_timer():
     minutes, seconds = divmod(current_time, 60)
     time_str = f"{minutes:02d}:{seconds:02d}" # format as "mm:ss"
     time_sur = font.render(time_str, False, (64, 64, 64))
-    time_rec = score_sur.get_rect(center=(110, 30))
+    time_rec = time_sur.get_rect(center=(40, 30))
     screen.blit(time_sur, time_rec)
 
 def collision_sprite():
@@ -155,17 +155,21 @@ while True:
 
         # game over texts
         textover_sur = font_over.render('GAME OVER', False, (64, 45, 75))
-        textover_rec = textover_sur.get_rect(center = (390, 200))
-        
+        textover_rec = textover_sur.get_rect(center = (390, 180))
+
+        restart_sur = font_choices.render('RESTART', False, (64, 45, 75))
+        restart_rec = restart_sur.get_rect(center = (390, 230))
+
         yes_sur = font_choices.render('YES', False, (0, 255, 0))
-        yes_rec = yes_sur.get_rect(center = (330, 260))
+        yes_rec = yes_sur.get_rect(center = (330, 270))
         
         no_sur = font_choices.render('NO', False, (255, 0, 0))
-        no_rec = no_sur.get_rect(center = (450, 260))
+        no_rec = no_sur.get_rect(center = (450, 270))
         
         # Display
         screen.blit(gameover_sur, (0, 0))
         screen.blit(textover_sur, textover_rec)
+        screen.blit(restart_sur, restart_rec)
         screen.blit(yes_sur, yes_rec)
         screen.blit(no_sur, no_rec)
 
