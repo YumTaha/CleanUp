@@ -101,8 +101,6 @@ trash_group = pygame.sprite.Group()
 
 # Initialize the surface (background)
 background_sur = pygame.image.load('background/background.jpg').convert()
-score_sur = font.render('0 Cleaned - 0/10 Missed', False, (64, 64, 64))
-score_rec = score_sur.get_rect(center = (390, 30))
 
 # Timer
 obstacle_timer = pygame.USEREVENT + 1
@@ -123,7 +121,6 @@ while True:
 
         # Placing the surface we made on the original surface
         screen.blit(background_sur, (0, 0))
-        screen.blit(score_sur, score_rec)
         get_timer()
 
         trashcan.draw(screen)
@@ -132,6 +129,9 @@ while True:
         trash_group.update()
 
         score_sur = font.render(f'{trash_cleaned} Cleaned - {trash_missed}/10 Missed', False, (64, 64, 64))
+        score_rec = score_sur.get_rect(center = (390, 30))
+
+        screen.blit(score_sur, score_rec)
         
         # Colision detection and animation change
         collision_sprite()
